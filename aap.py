@@ -101,15 +101,15 @@ elif choice == "Login":
 						option = st.multiselect("Filter of Graphic",
 						["RR","Prediction_base_on_RH","Prediction_base_on_T"],
 						"RR")
-						appointment = st.slider("Filter of date",
-						min_value= datetime(2020,1,1),
-						max_value= datetime(2022,12,31),
-						value= (datetime(2020,1,1), datetime(2020,6,30	)))
+						start_date = st.date_input(
+    						"Filter Start date",
+    						datetime(2020, 1, 1))
+						end_date = st.date_input(
+    						"Filter end date",
+    						datetime(2021, 1, 1))
 						df2 = df[["Tanggal","RR","Prediction_base_on_RH","Prediction_base_on_T","T_avg","RH_avg"]]
 						df2.set_index("Tanggal", drop= True, inplace= True)
-						st.write("Start on: ", appointment[0])
-						st.write("End on: ", appointment[1])
-						df2 = df2.loc[str(appointment[0]):str(appointment[1]), ]
+						df2 = df2.loc[str(start_date):str(end_date), ]
 						st.line_chart(data= df2 , y = option)
 						with st.expander("Suhu dan Kelembaban"):
 							tab1, tab2 = st.tabs(["Suhu","Kelembaban"])
