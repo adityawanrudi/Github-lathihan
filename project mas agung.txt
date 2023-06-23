@@ -1,0 +1,2 @@
+tanggal Tavg(suhu rata-rata) RH_avg(kelembpan rata-rata) RR Curah hujan Y1'
+grafik garis

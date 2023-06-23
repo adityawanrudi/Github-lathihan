@@ -1,5 +1,8 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
+import matplotlib.pyplot as plt 
+import seaborn as sns
 
 #DB Management
 import sqlite3 
@@ -9,6 +12,34 @@ c = conn.cursor()
 def create_usertable():
 	c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT,password TEXT)')
 
+def distribution_plot(input_df, input_data):
+	fig = plt.figure(figsize= (10,8))
+	sns.scatterplot(data= input_df, x=input_data, y= "RR")
+	st.pyplot(fig)
+
+def input_number(input):
+	number = st.number_input(input)
+	return number
+
+def curah_hujan(param_1 , param_2, param_3):
+	y_Value = param_1 + (param_2 * param_3)
+	return y_Value
+
+def ramalan_cuaca (value_pred):
+	if value_pred < 1:
+		st.subheader("CERAH")
+	elif value_pred >= 1 and value_pred < 5:
+		st.subheader("Hujan Ringan")
+	else:
+		st.subheader("Hujan")
+
+def df_calculate(input_param):
+	if input_param == "SUHU":
+		df = pd.read_csv(r"C:/Users/keceb/Documents/Python/Github-lathihan/data_suhu.csv")
+		return df
+	else:
+		df = pd.read_csv(r"C:/Users/keceb/Documents/Python/Github-lathihan/data_kelembaban.csv")
+		return df
 
 def add_userdata(username,password):
 	c.execute('INSERT INTO userstable(username,password) VALUES (?,?)',(username,password))
@@ -24,7 +55,7 @@ def view_all_users():
 	data = c.fetchall()
 	return data
 
-"""Simple Login App"""
+
 
 st.title("Prakiraan Cuaca Streamlit")
 
@@ -49,9 +80,51 @@ elif choice == "Login":
 					task = st.selectbox("Task",["Add Post","Analytics","Profiles"])
 					if task == "Add Post":
 						st.subheader("Add Your Post")
+						p_date = st.date_input("Tanggal Prediksi"
+						, datetime(2023, 1, 1))
+						option_cal = st.selectbox("Parameter", ("SUHU", "KELEMBABAN"))
+						value_param = input_number(option_cal)
+						df3 = df_calculate(option_cal)
+						month = p_date.month
+						df3 = df3.loc[df3["BULAN"] == month]
+						a_Param = float(df3.iloc[0,1])
+						b_Param = float(df3.iloc[0,2])
+						pred_val = curah_hujan(a_Param, b_Param, value_param)
+						st.write("Prediksi curah hujan: ", round(pred_val, 2))
+						ramalan_cuaca(pred_val)
 
 					elif task == "Analytics":
 						st.subheader("Analytics")
+						df = pd.read_csv(r"C:/Users/keceb/Documents/Python/Github-lathihan/data_cuaca.csv")
+						df["Tahun"] = df["Tahun"].astype(str)
+						st.dataframe(df)
+						option = st.multiselect("Filter of Graphic",
+						["RR","Prediction_base_on_RH","Prediction_base_on_T"],
+						"RR")
+						appointment = st.slider("Filter of date",
+						min_value= datetime(2020,1,1),
+						max_value= datetime(2022,12,31),
+						value= (datetime(2020,1,1), datetime(2020,6,30	)))
+						df2 = df[["Tanggal","RR","Prediction_base_on_RH","Prediction_base_on_T","T_avg","RH_avg"]]
+						df2.set_index("Tanggal", drop= True, inplace= True)
+						st.write("Start on: ", appointment[0])
+						st.write("End on: ", appointment[1])
+						df2 = df2.loc[str(appointment[0]):str(appointment[1]), ]
+						st.line_chart(data= df2 , y = option)
+						with st.expander("Suhu dan Kelembaban"):
+							tab1, tab2 = st.tabs(["Suhu","Kelembaban"])
+							with tab1:
+								st.subheader("SUHU")
+								st.line_chart(data= df2, y = "T_avg")
+							with tab2:
+								st.subheader("KELEMBABAN")
+								st.line_chart(data= df2, y = "RH_avg")
+						with st.expander("Distribusi Suhu, Kelembaban & Curah Hujan"):
+							tab1, tab2 = st.tabs(["Suhu","Kelembaban"])
+							with tab1:
+								distribution_plot(df2, "T_avg")
+							with tab2:
+								distribution_plot(df2, "RH_avg")
 					elif task == "Profiles":
 						st.subheader("User Profiles")
 						user_result = view_all_users()
