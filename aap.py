@@ -90,6 +90,8 @@ elif choice == "Login":
 						a_Param = float(df3.iloc[0,1])
 						b_Param = float(df3.iloc[0,2])
 						pred_val = curah_hujan(a_Param, b_Param, value_param)
+						if pred_val < 0:
+							pred_val = 0
 						st.write("Prediksi curah hujan: ", round(pred_val, 2))
 						ramalan_cuaca(pred_val)
 
